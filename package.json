@@ -1,0 +1,10 @@
+{
+  "name": "web-3d-master",
+  "version": "1.0.0",
+  "description": "3D web development mastery skill for Claude Code, Cursor, and Copilot",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MickeyAlton33/web-3d-master"
+  }
+}

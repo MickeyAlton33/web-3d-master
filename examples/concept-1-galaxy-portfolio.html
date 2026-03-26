@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nova Chen — Creative Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #050510;
+    --text: #e8e4dc;
+    --gold: #ffd700;
+    --blue: #4169e1;
+  }
+
+  html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    overflow-y: scroll;
+  }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    cursor: none;
+  }
+
+  canvas#galaxy {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+  }
+
+  /* ── Custom cursor ── */
+  #cursor {
+    position: fixed;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 12px 4px rgba(255,215,0,0.6);
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s;
+  }
+  .cursor-trail {
+    position: fixed;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: rgba(255,215,0,0.5);
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    animation: trail-fade 0.6s forwards ease-out;
+  }
+  @keyframes trail-fade {
+    to { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+  }
+
+  /* ── Sections ── */
+  .section {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-align: start;
+    padding: 4rem 2rem;
+  }
+
+  .section-inner {
+    max-width: 1100px;
+    width: 100%;
+  }
+
+  /* ── Hero ── */
+  .hero-name {
+    font-size: clamp(4rem, 12vw, 10rem);
+    font-weight: 700;
+    line-height: 0.95;
+    -webkit-text-stroke: 2px var(--text);
+    color: transparent;
+    letter-spacing: -0.03em;
+  }
+  .hero-subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.6rem);
+    font-weight: 300;
+    margin-top: 1.5rem;
+    opacity: 0.7;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.4;
+    animation: pulse-hint 2s ease-in-out infinite;
+  }
+  @keyframes pulse-hint {
+    0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
+    50% { opacity: 0.7; transform: translateX(-50%) translateY(6px); }
+  }
+
+  /* ── Work ── */
+  .work-heading {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 600;
+    margin-bottom: 3rem;
+  }
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+  }
+  .project-card {
+    perspective: 800px;
+  }
+  .project-card-inner {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: transform 0.15s ease-out, box-shadow 0.3s;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .project-card-inner:hover {
+    box-shadow: 0 20px 60px rgba(255,215,0,0.08);
+  }
+  .project-card-inner h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+  }
+  .project-card-inner .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    background: rgba(255,215,0,0.12);
+    color: var(--gold);
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    margin-right: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+  .project-card-inner p {
+    font-size: 0.9rem;
+    opacity: 0.65;
+    line-height: 1.6;
+    margin-top: 0.8rem;
+  }
+
+  /* ── About ── */
+  .about-heading {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 600;
+    margin-bottom: 2rem;
+  }
+  .glass-card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 680px;
+  }
+  .glass-card p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    font-weight: 300;
+    opacity: 0.85;
+  }
+  .glass-card p + p { margin-top: 1.2rem; }
+
+  /* ── Contact ── */
+  .contact-inner {
+    text-align: center;
+  }
+  .contact-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    opacity: 0.5;
+    margin-bottom: 1rem;
+  }
+  .contact-email {
+    font-size: clamp(1.5rem, 5vw, 3.5rem);
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 2px solid rgba(255,215,0,0.3);
+    transition: border-color 0.3s;
+  }
+  .contact-email:hover {
+    border-color: var(--gold);
+  }
+  .contact-footnote {
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    opacity: 0.35;
+  }
+
+  /* ── Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    .cursor-trail { display: none; }
+    #cursor { display: none; }
+    body { cursor: auto; }
+    .scroll-hint { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="galaxy"></canvas>
+<div id="cursor"></div>
+
+<!-- HERO -->
+<section class="section" id="sec-hero">
+  <div class="section-inner">
+    <h1 class="hero-name">NOVA<br>CHEN</h1>
+    <p class="hero-subtitle">Creative Developer</p>
+  </div>
+  <div class="scroll-hint">Scroll to explore</div>
+</section>
+
+<!-- WORK -->
+<section class="section" id="sec-work">
+  <div class="section-inner">
+    <h2 class="work-heading">Selected Work</h2>
+    <div class="projects-grid">
+      <div class="project-card">
+        <div class="project-card-inner" data-tilt>
+          <h3>Nebula UI</h3>
+          <span class="tag">React</span><span class="tag">Three.js</span><span class="tag">GLSL</span>
+          <p>An immersive design system with 3D micro-interactions and spatial audio feedback.</p>
+        </div>
+      </div>
+      <div class="project-card">
+        <div class="project-card-inner" data-tilt>
+          <h3>Drift</h3>
+          <span class="tag">WebGL</span><span class="tag">Rust</span><span class="tag">WASM</span>
+          <p>Real-time fluid simulation running at 60fps via compute shaders compiled to WebAssembly.</p>
+        </div>
+      </div>
+      <div class="project-card">
+        <div class="project-card-inner" data-tilt>
+          <h3>Voxel Garden</h3>
+          <span class="tag">Three.js</span><span class="tag">Node</span><span class="tag">Socket.io</span>
+          <p>Collaborative voxel world where visitors grow procedural flora in shared space.</p>
+        </div>
+      </div>
+      <div class="project-card">
+        <div class="project-card-inner" data-tilt>
+          <h3>Pulse</h3>
+          <span class="tag">D3</span><span class="tag">Canvas</span><span class="tag">ML</span>
+          <p>Generative data portraits that transform biometric input into living abstract art.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" id="sec-about">
+  <div class="section-inner">
+    <h2 class="about-heading">About</h2>
+    <div class="glass-card">
+      <p>I'm a creative developer working at the intersection of design, code, and wonder. I build immersive web experiences that make people forget they're looking at a browser.</p>
+      <p>With 8 years of experience spanning interactive installations, WebGL experiments, and product design systems, I believe the web should feel like a place you want to inhabit -- not just visit.</p>
+      <p>Currently based in Tokyo, previously at Vercel, Unit9, and Active Theory.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section" id="sec-contact">
+  <div class="section-inner contact-inner">
+    <p class="contact-label">Get in touch</p>
+    <a href="mailto:hello@novachen.dev" class="contact-email">hello@novachen.dev</a>
+    <p class="contact-footnote">Built with Three.js, shaders, and curiosity.</p>
+  </div>
+</section>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ── Reduced motion check ──
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── Renderer ──
+const canvas = document.getElementById('galaxy');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+
+// ── Camera ──
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 2, 8);
+
+// ── Galaxy parameters ──
+const PARTICLE_COUNT = 15000;
+const ARMS = 2;
+const RADIUS = 12;
+const SPIN = 2.5;
+const RANDOMNESS = 0.4;
+const RANDOMNESS_POWER = 3;
+
+const geometry = new THREE.BufferGeometry();
+const positions = new Float32Array(PARTICLE_COUNT * 3);
+const colors = new Float32Array(PARTICLE_COUNT * 3);
+const scales = new Float32Array(PARTICLE_COUNT);
+const randomness = new Float32Array(PARTICLE_COUNT * 3);
+const radiusArr = new Float32Array(PARTICLE_COUNT);
+
+const colorInner = new THREE.Color('#ffd700');
+const colorOuter = new THREE.Color('#4169e1');
+
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  const i3 = i * 3;
+  const r = Math.random() * RADIUS;
+  radiusArr[i] = r;
+
+  // Spiral arm
+  const armAngle = ((i % ARMS) / ARMS) * Math.PI * 2;
+  const spinAngle = r * SPIN;
+
+  // Randomness with power curve (more clustered near center)
+  const rx = Math.pow(Math.random(), RANDOMNESS_POWER) * (Math.random() < 0.5 ? 1 : -1) * RANDOMNESS * r;
+  const ry = Math.pow(Math.random(), RANDOMNESS_POWER) * (Math.random() < 0.5 ? 1 : -1) * RANDOMNESS * 0.4;
+  const rz = Math.pow(Math.random(), RANDOMNESS_POWER) * (Math.random() < 0.5 ? 1 : -1) * RANDOMNESS * r;
+
+  positions[i3    ] = Math.cos(armAngle + spinAngle) * r;
+  positions[i3 + 1] = 0.0;
+  positions[i3 + 2] = Math.sin(armAngle + spinAngle) * r;
+
+  randomness[i3    ] = rx;
+  randomness[i3 + 1] = ry;
+  randomness[i3 + 2] = rz;
+
+  // Color gradient
+  const mixed = colorInner.clone().lerp(colorOuter, r / RADIUS);
+  colors[i3    ] = mixed.r;
+  colors[i3 + 1] = mixed.g;
+  colors[i3 + 2] = mixed.b;
+
+  // Size variation
+  scales[i] = 0.5 + Math.random() * 1.5;
+}
+
+geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+geometry.setAttribute('aRandomness', new THREE.BufferAttribute(randomness, 3));
+geometry.setAttribute('aRadius', new THREE.BufferAttribute(radiusArr, 1));
+
+// ── Shader Material ──
+const galaxyMaterial = new THREE.ShaderMaterial({
+  vertexShader: /* glsl */`
+    uniform float uTime;
+    uniform float uSize;
+
+    attribute float aScale;
+    attribute vec3 aRandomness;
+    attribute float aRadius;
+
+    varying vec3 vColor;
+
+    void main() {
+      vec4 modelPosition = vec4(position, 1.0);
+
+      // Differential rotation: inner particles orbit faster
+      float speed = 0.15 / (0.5 + aRadius * 0.15);
+      float angle = uTime * speed;
+      float cosA = cos(angle);
+      float sinA = sin(angle);
+
+      // Rotate around Y axis
+      float x = modelPosition.x * cosA - modelPosition.z * sinA;
+      float z = modelPosition.x * sinA + modelPosition.z * cosA;
+      modelPosition.x = x;
+      modelPosition.z = z;
+
+      // Add randomness offset
+      modelPosition.xyz += aRandomness;
+
+      vec4 viewPosition = viewMatrix * modelMatrix * modelPosition;
+      vec4 projectedPosition = projectionMatrix * viewPosition;
+      gl_Position = projectedPosition;
+
+      // Size attenuation
+      gl_PointSize = uSize * aScale;
+      gl_PointSize *= (1.0 / -viewPosition.z);
+
+      vColor = color;
+    }
+  `,
+  fragmentShader: /* glsl */`
+    varying vec3 vColor;
+
+    void main() {
+      // Soft circle
+      float dist = length(gl_PointCoord - vec2(0.5));
+      if (dist > 0.5) discard;
+
+      // Soft falloff
+      float strength = 1.0 - (dist * 2.0);
+      strength = pow(strength, 1.5);
+
+      gl_FragColor = vec4(vColor, strength);
+    }
+  `,
+  uniforms: {
+    uTime: { value: 0 },
+    uSize: { value: 30.0 * renderer.getPixelRatio() }
+  },
+  vertexColors: true,
+  transparent: true,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false
+});
+
+const particles = new THREE.Points(geometry, galaxyMaterial);
+// Tilt the galaxy slightly for visual interest
+particles.rotation.x = -0.4;
+scene.add(particles);
+
+// ── Mouse tracking ──
+const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
+
+document.addEventListener('mousemove', (e) => {
+  mouse.targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouse.targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+
+// ── Scroll tracking ──
+let scrollProgress = 0;
+const totalScrollHeight = () => document.documentElement.scrollHeight - window.innerHeight;
+
+window.addEventListener('scroll', () => {
+  scrollProgress = window.scrollY / totalScrollHeight();
+});
+
+// ── Camera base positions for scroll ──
+const cameraStart = new THREE.Vector3(0, 2, 8);
+const cameraEnd = new THREE.Vector3(0, 0.5, -2);
+
+// ── Custom cursor ──
+const cursorEl = document.getElementById('cursor');
+const cursorPos = { x: 0, y: 0 };
+let lastTrailTime = 0;
+
+document.addEventListener('mousemove', (e) => {
+  cursorPos.x = e.clientX;
+  cursorPos.y = e.clientY;
+
+  if (!prefersReducedMotion) {
+    cursorEl.style.left = e.clientX + 'px';
+    cursorEl.style.top = e.clientY + 'px';
+
+    // Trail effect -- throttle to every 30ms
+    const now = Date.now();
+    if (now - lastTrailTime > 30) {
+      lastTrailTime = now;
+      const trail = document.createElement('div');
+      trail.className = 'cursor-trail';
+      trail.style.left = e.clientX + 'px';
+      trail.style.top = e.clientY + 'px';
+      document.body.appendChild(trail);
+      setTimeout(() => trail.remove(), 600);
+    }
+  }
+});
+
+// ── 3D tilt on project cards ──
+document.querySelectorAll('[data-tilt]').forEach((card) => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    card.style.transform = `rotateY(${dx * 10}deg) rotateX(${-dy * 10}deg) scale(1.02)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'rotateY(0) rotateX(0) scale(1)';
+  });
+});
+
+// ── Resize ──
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  galaxyMaterial.uniforms.uSize.value = 30.0 * renderer.getPixelRatio();
+});
+
+// ── Animation loop ──
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const elapsed = clock.getElapsedTime();
+
+  // Update time uniform (skip animation if reduced motion)
+  if (!prefersReducedMotion) {
+    galaxyMaterial.uniforms.uTime.value = elapsed;
+  }
+
+  // Eased mouse follow on camera
+  if (!prefersReducedMotion) {
+    mouse.x += (mouse.targetX - mouse.x) * 0.05;
+    mouse.y += (mouse.targetY - mouse.y) * 0.05;
+  }
+
+  // Scroll-driven camera position
+  const camTarget = new THREE.Vector3().lerpVectors(cameraStart, cameraEnd, scrollProgress);
+
+  if (!prefersReducedMotion) {
+    camTarget.x += mouse.x * 0.8;
+    camTarget.y += -mouse.y * 0.4;
+  }
+
+  camera.position.lerp(camTarget, 0.08);
+  camera.lookAt(0, 0, 0);
+
+  renderer.render(scene, camera);
+}
+
+animate();
+</script>
+</body>
+</html>

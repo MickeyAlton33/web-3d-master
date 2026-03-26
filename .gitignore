@@ -1,0 +1,9 @@
+.DS_Store
+.claude/
+.worktrees/
+node_modules/
+package-lock.json
+*.log
+.env
+.env.*
+package-lock.json

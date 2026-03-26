@@ -1,0 +1,10 @@
+*.md text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.js text eol=lf
+*.glsl text eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.webp binary
+*.glb binary
