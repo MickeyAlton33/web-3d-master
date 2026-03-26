@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOID STUDIO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --accent: #8b5cf6;
+    --text: #e8e4dc;
+    --text-muted: #8a857d;
+    --sans: 'Space Grotesk', sans-serif;
+    --serif: 'Cormorant Garamond', serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    color: var(--text);
+    background: #050008;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── WebGL Canvas ── */
+  #gl-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0;
+  }
+
+  /* ── Custom Cursor ── */
+  #cursor-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 9999;
+    pointer-events: none;
+    mix-blend-mode: difference;
+  }
+
+  /* ── Content Layer ── */
+  .content {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+  }
+
+  /* ── Navigation ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 48px;
+    mix-blend-mode: difference;
+  }
+
+  .nav-logo {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text);
+    text-decoration: none;
+    position: relative;
+    padding-bottom: 4px;
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%; height: 1px;
+    background: var(--accent);
+    transform: translateX(-101%);
+    transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .nav-links a:hover::after {
+    transform: translateX(0);
+  }
+
+  .nav-links a.exit-right::after {
+    transform: translateX(101%);
+  }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0 48px;
+  }
+
+  .hero-title {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: clamp(64px, 12vw, 180px);
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--text);
+    letter-spacing: -0.02em;
+    user-select: none;
+  }
+
+  .hero-tagline {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(18px, 2.5vw, 28px);
+    color: var(--text-muted);
+    margin-top: 32px;
+    font-weight: 400;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  /* ── Projects Grid ── */
+  .projects {
+    padding: 120px 48px 160px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 64px;
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+
+  .project-card {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: none;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .project-card:hover {
+    transform: scale(1.02);
+  }
+
+  .card-gradient {
+    position: absolute;
+    inset: 0;
+    opacity: 0.5;
+    transition: opacity 0.5s ease;
+  }
+
+  .project-card:hover .card-gradient {
+    opacity: 0.75;
+  }
+
+  .card-gradient.g1 { background: linear-gradient(135deg, #1a0030, #2d1b69); }
+  .card-gradient.g2 { background: linear-gradient(135deg, #000a1f, #1a3a5c); }
+  .card-gradient.g3 { background: linear-gradient(135deg, #0d0d0d, #8b5cf6); }
+  .card-gradient.g4 { background: linear-gradient(135deg, #1f0a2e, #4a1942); }
+  .card-gradient.g5 { background: linear-gradient(135deg, #0a0a1a, #2a1a4a); }
+  .card-gradient.g6 { background: linear-gradient(135deg, #050510, #1a0a3a); }
+
+  .card-info {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 28px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+  }
+
+  .card-name {
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 6px;
+    transition: color 0.3s ease;
+  }
+
+  .project-card:hover .card-name {
+    color: var(--accent);
+  }
+
+  .card-category {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  /* ── About ── */
+  .about {
+    padding: 80px 48px 160px;
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .about-text {
+    font-family: var(--serif);
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  /* ── Contact ── */
+  .contact {
+    padding: 0 48px 120px;
+    text-align: center;
+  }
+
+  .contact .section-label {
+    margin-bottom: 24px;
+  }
+
+  .contact-email {
+    font-family: var(--sans);
+    font-size: clamp(20px, 3vw, 36px);
+    font-weight: 300;
+    color: var(--text);
+    text-decoration: none;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 4px;
+  }
+
+  .contact-email::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%; height: 1px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .contact-email:hover::after {
+    transform: scaleX(1);
+  }
+
+  .contact-email:hover {
+    color: var(--accent);
+    transition: color 0.3s ease;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .projects-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    nav { padding: 20px 24px; }
+    .hero, .projects, .about, .contact { padding-left: 24px; padding-right: 24px; }
+  }
+
+  @media (max-width: 600px) {
+    .projects-grid {
+      grid-template-columns: 1fr;
+    }
+    .nav-links { gap: 20px; }
+    .nav-links a { font-size: 11px; }
+  }
+
+  /* ── Reduced Motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    #gl-canvas { display: none; }
+    #cursor-canvas { display: none; }
+    body {
+      background: linear-gradient(135deg, #050008 0%, #0a0520 50%, #050008 100%);
+      cursor: auto;
+    }
+    .project-card { cursor: pointer; }
+    .hero-title { -webkit-text-stroke: 1.5px var(--text); }
+    .nav-links a::after { transition: none; }
+    .project-card { transition: none; }
+    .contact-email::after { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="gl-canvas"></canvas>
+<canvas id="cursor-canvas"></canvas>
+
+<div class="content">
+  <nav>
+    <div class="nav-logo">Void Studio</div>
+    <ul class="nav-links">
+      <li><a href="#work">Work</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <section class="hero">
+    <h1 class="hero-title">VOID<br>STUDIO</h1>
+    <p class="hero-tagline">We craft the invisible.</p>
+    <div class="scroll-hint">Scroll to explore</div>
+  </section>
+
+  <section class="projects" id="work">
+    <div class="section-label">Selected Work</div>
+    <div class="projects-grid">
+      <div class="project-card" data-index="0">
+        <div class="card-gradient g1"></div>
+        <div class="card-info">
+          <div class="card-name">Phantom Protocol</div>
+          <div class="card-category">Brand Identity</div>
+        </div>
+      </div>
+      <div class="project-card" data-index="1">
+        <div class="card-gradient g2"></div>
+        <div class="card-info">
+          <div class="card-name">Neon Requiem</div>
+          <div class="card-category">Interactive Experience</div>
+        </div>
+      </div>
+      <div class="project-card" data-index="2">
+        <div class="card-gradient g3"></div>
+        <div class="card-info">
+          <div class="card-name">Aether Collective</div>
+          <div class="card-category">Web Platform</div>
+        </div>
+      </div>
+      <div class="project-card" data-index="3">
+        <div class="card-gradient g4"></div>
+        <div class="card-info">
+          <div class="card-name">Subliminal Drift</div>
+          <div class="card-category">Motion Design</div>
+        </div>
+      </div>
+      <div class="project-card" data-index="4">
+        <div class="card-gradient g5"></div>
+        <div class="card-info">
+          <div class="card-name">Obsidian Wave</div>
+          <div class="card-category">Product Design</div>
+        </div>
+      </div>
+      <div class="project-card" data-index="5">
+        <div class="card-gradient g6"></div>
+        <div class="card-info">
+          <div class="card-name">Silent Architecture</div>
+          <div class="card-category">Spatial Computing</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="about" id="about">
+    <div class="section-label">About</div>
+    <p class="about-text">Founded in the space between pixels.</p>
+  </section>
+
+  <section class="contact" id="contact">
+    <div class="section-label">Contact</div>
+    <a href="mailto:hello@voidstudio.com" class="contact-email">hello@voidstudio.com</a>
+  </section>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// ─────────────────────────────────────────────
+// Reduced motion check
+// ─────────────────────────────────────────────
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (prefersReducedMotion) {
+  // Exit early; CSS handles the static fallback
+  document.body.style.cursor = 'auto';
+} else {
+  initWebGL();
+  initCursor();
+}
+
+// ─────────────────────────────────────────────
+// Nav directional underline
+// ─────────────────────────────────────────────
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('mouseleave', () => {
+    link.classList.add('exit-right');
+    link.addEventListener('transitionend', () => {
+      link.classList.remove('exit-right');
+    }, { once: true });
+  });
+});
+
+// ─────────────────────────────────────────────
+// WebGL Setup
+// ─────────────────────────────────────────────
+function initWebGL() {
+  const canvas = document.getElementById('gl-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+  // ── Uniforms ──
+  const uniforms = {
+    uTime: { value: 0.0 },
+    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+    uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+    uHoverPoint: { value: new THREE.Vector2(-1.0, -1.0) },
+    uHoverStrength: { value: 0.0 },
+  };
+
+  // ── Vertex Shader ──
+  const vertexShader = /* glsl */ `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position, 1.0);
+    }
+  `;
+
+  // ── Fragment Shader ──
+  const fragmentShader = /* glsl */ `
+    precision highp float;
+
+    uniform float uTime;
+    uniform vec2 uResolution;
+    uniform vec2 uMouse;
+    uniform vec2 uHoverPoint;
+    uniform float uHoverStrength;
+
+    varying vec2 vUv;
+
+    // ── Simplex 3D noise (Ashima Arts) ──
+    vec3 mod289(vec3 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
+    vec4 mod289(vec4 x) { return x - floor(x * (1.0/289.0)) * 289.0; }
+    vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+    vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+    float snoise(vec3 v) {
+      const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+      const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+
+      vec3 i  = floor(v + dot(v, C.yyy));
+      vec3 x0 = v - i + dot(i, C.xxx);
+
+      vec3 g = step(x0.yzx, x0.xyz);
+      vec3 l = 1.0 - g;
+      vec3 i1 = min(g.xyz, l.zxy);
+      vec3 i2 = max(g.xyz, l.zxy);
+
+      vec3 x1 = x0 - i1 + C.xxx;
+      vec3 x2 = x0 - i2 + C.yyy;
+      vec3 x3 = x0 - D.yyy;
+
+      i = mod289(i);
+      vec4 p = permute(permute(permute(
+                i.z + vec4(0.0, i1.z, i2.z, 1.0))
+              + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+              + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+
+      float n_ = 0.142857142857;
+      vec3 ns = n_ * D.wyz - D.xzx;
+
+      vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+
+      vec4 x_ = floor(j * ns.z);
+      vec4 y_ = floor(j - 7.0 * x_);
+
+      vec4 x = x_ * ns.x + ns.yyyy;
+      vec4 y = y_ * ns.x + ns.yyyy;
+      vec4 h = 1.0 - abs(x) - abs(y);
+
+      vec4 b0 = vec4(x.xy, y.xy);
+      vec4 b1 = vec4(x.zw, y.zw);
+
+      vec4 s0 = floor(b0)*2.0 + 1.0;
+      vec4 s1 = floor(b1)*2.0 + 1.0;
+      vec4 sh = -step(h, vec4(0.0));
+
+      vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+      vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+
+      vec3 p0 = vec3(a0.xy, h.x);
+      vec3 p1 = vec3(a0.zw, h.y);
+      vec3 p2 = vec3(a1.xy, h.z);
+      vec3 p3 = vec3(a1.zw, h.w);
+
+      vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+      p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+
+      vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+      m = m * m;
+      return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+    }
+
+    // ── FBM ──
+    float fbm(vec3 p) {
+      float value = 0.0;
+      float amplitude = 0.5;
+      float frequency = 1.0;
+      for (int i = 0; i < 6; i++) {
+        value += amplitude * snoise(p * frequency);
+        amplitude *= 0.5;
+        frequency *= 2.1;
+      }
+      return value;
+    }
+
+    void main() {
+      vec2 uv = vUv;
+      float aspect = uResolution.x / uResolution.y;
+      vec2 st = uv;
+      st.x *= aspect;
+
+      // ── Mouse gravitational warp ──
+      vec2 mouseNorm = uMouse;
+      mouseNorm.x *= aspect;
+      vec2 toMouse = mouseNorm - st;
+      float mouseDist = length(toMouse);
+      float mouseInfluence = 0.08 / (mouseDist + 0.3);
+      st += toMouse * mouseInfluence * 0.15;
+
+      // ── Hover ripple distortion ──
+      if (uHoverStrength > 0.001) {
+        vec2 hoverNorm = uHoverPoint;
+        hoverNorm.x *= aspect;
+        vec2 toHover = st - hoverNorm;
+        float hoverDist = length(toHover);
+
+        // Concentric rings
+        float ripple = sin(hoverDist * 30.0 - uTime * 4.0) * 0.5 + 0.5;
+        float falloff = exp(-hoverDist * 4.0) * uHoverStrength;
+        float rings = ripple * falloff;
+
+        // Displace UVs along the direction away from hover point
+        vec2 dir = normalize(toHover + 0.001);
+        st += dir * rings * 0.06;
+      }
+
+      float t = uTime * 0.12;
+
+      // ── Layered noise field ──
+      float n1 = fbm(vec3(st * 1.5, t));
+      float n2 = fbm(vec3(st * 2.8 + 5.0, t * 0.7 + 10.0));
+      float n3 = snoise(vec3(st * 0.8, t * 0.5));
+
+      float combined = n1 * 0.5 + n2 * 0.3 + n3 * 0.2;
+      combined = combined * 0.5 + 0.5; // Remap to 0..1
+
+      // ── Color palette ──
+      vec3 deepPurple = vec3(0.102, 0.0, 0.188);   // #1a0030
+      vec3 midnightBlue = vec3(0.0, 0.039, 0.122);  // #000a1f
+      vec3 black = vec3(0.02, 0.0, 0.03);
+
+      // Mix between colors using noise layers
+      vec3 color = mix(black, deepPurple, smoothstep(0.2, 0.6, combined));
+      color = mix(color, midnightBlue, smoothstep(0.4, 0.8, n2 * 0.5 + 0.5));
+
+      // Subtle brightness variation
+      float brightness = smoothstep(0.45, 0.55, combined) * 0.15;
+      color += brightness;
+
+      // Vignette
+      vec2 vigUv = vUv * 2.0 - 1.0;
+      float vignette = 1.0 - dot(vigUv * 0.5, vigUv * 0.5);
+      vignette = smoothstep(0.0, 1.0, vignette);
+      color *= vignette;
+
+      // Hover glow
+      if (uHoverStrength > 0.001) {
+        vec2 hoverNorm = uHoverPoint;
+        hoverNorm.x *= aspect;
+        float hd = length(st - hoverNorm);
+        float glow = exp(-hd * 3.0) * uHoverStrength * 0.25;
+        color += vec3(0.545, 0.361, 0.965) * glow; // accent color
+      }
+
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `;
+
+  // ── Fullscreen quad ──
+  const geometry = new THREE.PlaneGeometry(2, 2);
+  const material = new THREE.ShaderMaterial({
+    vertexShader,
+    fragmentShader,
+    uniforms,
+    depthTest: false,
+    depthWrite: false,
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
+
+  // ── Mouse tracking ──
+  let mouseTarget = new THREE.Vector2(0.5, 0.5);
+  let mouseCurrent = new THREE.Vector2(0.5, 0.5);
+
+  document.addEventListener('mousemove', (e) => {
+    mouseTarget.set(
+      e.clientX / window.innerWidth,
+      1.0 - e.clientY / window.innerHeight
+    );
+  });
+
+  // ── Hover state ──
+  let hoverTarget = 0;
+  let hoverCurrent = 0;
+  let hoverPointTarget = new THREE.Vector2(-1, -1);
+
+  const cards = document.querySelectorAll('.project-card');
+  cards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      const rect = card.getBoundingClientRect();
+      const cx = (rect.left + rect.width / 2) / window.innerWidth;
+      const cy = 1.0 - (rect.top + rect.height / 2) / window.innerHeight;
+      hoverPointTarget.set(cx, cy);
+      hoverTarget = 1.0;
+    });
+    card.addEventListener('mouseleave', () => {
+      hoverTarget = 0.0;
+    });
+  });
+
+  // ── Resize ──
+  window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+  });
+
+  // ── Render Loop ──
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    uniforms.uTime.value = clock.getElapsedTime();
+
+    // Smooth mouse
+    mouseCurrent.lerp(mouseTarget, 0.05);
+    uniforms.uMouse.value.copy(mouseCurrent);
+
+    // Smooth hover
+    hoverCurrent += (hoverTarget - hoverCurrent) * 0.08;
+    uniforms.uHoverStrength.value = hoverCurrent;
+    uniforms.uHoverPoint.value.lerp(hoverPointTarget, 0.1);
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+}
+
+// ─────────────────────────────────────────────
+// Custom Cursor
+// ─────────────────────────────────────────────
+function initCursor() {
+  const cursorCanvas = document.getElementById('cursor-canvas');
+  const ctx = cursorCanvas.getContext('2d');
+
+  let width, height;
+  function resizeCursor() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    cursorCanvas.width = width * window.devicePixelRatio;
+    cursorCanvas.height = height * window.devicePixelRatio;
+    cursorCanvas.style.width = width + 'px';
+    cursorCanvas.style.height = height + 'px';
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  }
+  resizeCursor();
+  window.addEventListener('resize', resizeCursor);
+
+  let cx = -100, cy = -100;
+  let tx = -100, ty = -100;
+
+  document.addEventListener('mousemove', (e) => {
+    tx = e.clientX;
+    ty = e.clientY;
+  });
+
+  document.addEventListener('mouseleave', () => {
+    tx = -100;
+    ty = -100;
+  });
+
+  function drawCursor() {
+    requestAnimationFrame(drawCursor);
+
+    cx += (tx - cx) * 0.15;
+    cy += (ty - cy) * 0.15;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // Glow circle
+    const radius = 10;
+    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+  }
+
+  drawCursor();
+}
+</script>
+
+</body>
+</html>

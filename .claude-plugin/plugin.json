@@ -1,0 +1,24 @@
+{
+  "name": "web-3d-master",
+  "displayName": "Web 3D Master",
+  "description": "Transforms Claude into a 3D web development expert. Three.js, React Three Fiber, WebGL shaders, Spline, scroll-driven 3D, particle systems, and performance optimization patterns extracted from 96 award-winning 3D websites.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Mickey Alton"
+  },
+  "homepage": "https://github.com/MickeyAlton33/web-3d-master",
+  "repository": "https://github.com/MickeyAlton33/web-3d-master",
+  "license": "MIT",
+  "keywords": [
+    "3d",
+    "threejs",
+    "webgl",
+    "react-three-fiber",
+    "spline",
+    "shaders",
+    "glsl",
+    "particles",
+    "web-design",
+    "creative-coding"
+  ]
+}

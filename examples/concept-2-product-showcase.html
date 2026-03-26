@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHRONOS | Luxury Watch Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --midnight: #0a0e1a;
+    --gold: #c9a84c;
+    --gold-dim: rgba(201, 168, 76, 0.3);
+    --white: #f0ece2;
+    --glass-bg: rgba(10, 14, 26, 0.55);
+    --glass-border: rgba(201, 168, 76, 0.15);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Playfair Display', Georgia, serif;
+    background: var(--midnight);
+    color: var(--white);
+    overflow-x: hidden;
+  }
+
+  /* ---------- Canvas ---------- */
+  #watch-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+  }
+
+  /* ---------- Ambient glow ---------- */
+  .ambient-glow {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 600px; height: 600px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+    z-index: 0;
+    pointer-events: none;
+    animation: glowPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+  }
+
+  /* ---------- Scroll sections ---------- */
+  .scroll-spacer {
+    height: 500vh;
+    position: relative;
+    z-index: 0;
+  }
+
+  /* ---------- Overlay sections ---------- */
+  .overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .section-content {
+    pointer-events: auto;
+    max-width: 520px;
+    padding: clamp(1.5rem, 3vw, 3rem);
+    border-radius: 16px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .section-content.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section-content.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  /* Positioning per section */
+  .section-content[data-section="0"] {
+    margin-left: clamp(2rem, 8vw, 10rem);
+  }
+  .section-content[data-section="1"] {
+    margin-left: auto;
+    margin-right: clamp(2rem, 8vw, 8rem);
+  }
+  .section-content[data-section="2"] {
+    margin-left: clamp(2rem, 8vw, 10rem);
+  }
+  .section-content[data-section="3"] {
+    margin-left: auto;
+    margin-right: clamp(2rem, 8vw, 8rem);
+  }
+  .section-content[data-section="4"] {
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  /* ---------- Typography ---------- */
+  .hero-title {
+    font-size: clamp(3.5rem, 10vw, 9rem);
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 0.3em;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .section-label {
+    font-size: clamp(0.65rem, 1vw, 0.8rem);
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+    font-weight: 600;
+  }
+
+  .section-heading {
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+
+  .section-body {
+    font-size: clamp(0.85rem, 1.2vw, 1rem);
+    line-height: 1.75;
+    opacity: 0.8;
+    font-weight: 400;
+  }
+
+  .gold-rule {
+    width: 48px; height: 2px;
+    background: var(--gold);
+    margin: 1.2rem 0;
+    border: none;
+  }
+
+  .section-content[data-section="4"] .gold-rule {
+    margin: 1.2rem auto;
+  }
+
+  .cta-button {
+    display: inline-block;
+    margin-top: 1.5rem;
+    padding: 0.9rem 2.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(0.8rem, 1vw, 0.95rem);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--midnight);
+    background: var(--gold);
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    transition: background 0.4s ease, transform 0.3s ease;
+    text-decoration: none;
+  }
+
+  .cta-button:hover {
+    background: #dbb95e;
+    transform: translateY(-2px);
+  }
+
+  /* ---------- Scroll progress bar ---------- */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), #dbb95e);
+    z-index: 100;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  /* ---------- Nav hint ---------- */
+  .scroll-hint {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    text-align: center;
+    opacity: 0.6;
+    transition: opacity 0.5s ease;
+  }
+
+  .scroll-hint.hidden { opacity: 0; pointer-events: none; }
+
+  .scroll-hint span {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .scroll-arrow {
+    width: 20px; height: 20px;
+    border-right: 1.5px solid var(--gold);
+    border-bottom: 1.5px solid var(--gold);
+    transform: rotate(45deg);
+    margin: 0 auto;
+    animation: arrowBounce 2s ease-in-out infinite;
+  }
+
+  @keyframes arrowBounce {
+    0%, 100% { transform: rotate(45deg) translateY(0); }
+    50% { transform: rotate(45deg) translateY(6px); }
+  }
+
+  /* ---------- Section dots ---------- */
+  .section-dots {
+    position: fixed;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1px solid var(--gold-dim);
+    background: transparent;
+    transition: background 0.4s ease, border-color 0.4s ease, transform 0.3s ease;
+    cursor: pointer;
+  }
+
+  .dot.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    transform: scale(1.3);
+  }
+
+  /* ---------- Reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .ambient-glow { animation: none; opacity: 0.6; }
+    .scroll-arrow { animation: none; }
+    .section-content { transition: opacity 0.15s ease; }
+    .section-content { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="ambient-glow"></div>
+<canvas id="watch-canvas"></canvas>
+
+<!-- Overlay sections (fixed, toggled by scroll) -->
+<div class="overlay" id="overlay">
+  <!-- Section 0: Hero -->
+  <div class="section-content" data-section="0">
+    <div class="hero-title">Chronos</div>
+    <div class="hero-subtitle">Mastery of Time</div>
+  </div>
+
+  <!-- Section 1: The Movement -->
+  <div class="section-content glass" data-section="1">
+    <div class="section-label">Calibre IX</div>
+    <h2 class="section-heading">The Movement</h2>
+    <hr class="gold-rule">
+    <p class="section-body">
+      316 individual components. 72-hour power reserve.
+      A self-winding mechanical heart beating at 28,800 vibrations per hour,
+      assembled entirely by hand in our Geneva atelier.
+    </p>
+  </div>
+
+  <!-- Section 2: The Dial -->
+  <div class="section-content glass" data-section="2">
+    <div class="section-label">Artisan Craft</div>
+    <h2 class="section-heading">The Dial</h2>
+    <hr class="gold-rule">
+    <p class="section-body">
+      Grand feu enamel meets hand-guilloche engraving.
+      Each dial requires forty hours of meticulous work --
+      a canvas of midnight blue that captures and bends light
+      like the night sky over Lake Geneva.
+    </p>
+  </div>
+
+  <!-- Section 3: The Heritage -->
+  <div class="section-content glass" data-section="3">
+    <div class="section-label">Since 1847</div>
+    <h2 class="section-heading">The Heritage</h2>
+    <hr class="gold-rule">
+    <p class="section-body">
+      Born in the Jura valleys, the Chronos lineage spans
+      seven generations of master watchmakers. Each timepiece
+      carries the weight of nearly two centuries of relentless
+      pursuit of perfection.
+    </p>
+  </div>
+
+  <!-- Section 4: CTA -->
+  <div class="section-content glass" data-section="4">
+    <div class="section-label">2026 Collection</div>
+    <h2 class="section-heading">Experience the<br>Collection</h2>
+    <hr class="gold-rule">
+    <p class="section-body">
+      Book a private consultation with our horological advisors.
+    </p>
+    <a href="#" class="cta-button">Reserve Your Viewing</a>
+  </div>
+</div>
+
+<!-- Scroll hint -->
+<div class="scroll-hint" id="scrollHint">
+  <span>Scroll to explore</span>
+  <div class="scroll-arrow"></div>
+</div>
+
+<!-- Section dots -->
+<div class="section-dots" id="sectionDots">
+  <div class="dot active" data-index="0"></div>
+  <div class="dot" data-index="1"></div>
+  <div class="dot" data-index="2"></div>
+  <div class="dot" data-index="3"></div>
+  <div class="dot" data-index="4"></div>
+</div>
+
+<!-- Scroll spacer -->
+<div class="scroll-spacer"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- Scene setup ----------
+const canvas = document.getElementById('watch-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0e1a);
+
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0, 6);
+
+// ---------- Materials ----------
+const goldColor = new THREE.Color(0xc9a84c);
+const darkMetal = new THREE.Color(0x1a1d2e);
+const dialColor = new THREE.Color(0x0d1225);
+
+const goldMat = new THREE.MeshStandardMaterial({
+  color: goldColor,
+  metalness: 0.95,
+  roughness: 0.25,
+  envMapIntensity: 1.0,
+});
+
+const bodyMat = new THREE.MeshStandardMaterial({
+  color: darkMetal,
+  metalness: 0.85,
+  roughness: 0.35,
+});
+
+const dialMat = new THREE.MeshStandardMaterial({
+  color: dialColor,
+  metalness: 0.4,
+  roughness: 0.6,
+});
+
+const handMat = new THREE.MeshStandardMaterial({
+  color: goldColor,
+  metalness: 0.9,
+  roughness: 0.2,
+  emissive: goldColor,
+  emissiveIntensity: 0.1,
+});
+
+// ---------- Build watch ----------
+const watchGroup = new THREE.Group();
+
+// Watch body (cylinder)
+const bodyGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.35, 64);
+const body = new THREE.Mesh(bodyGeo, bodyMat);
+body.rotation.x = Math.PI / 2;
+watchGroup.add(body);
+
+// Bezel (torus)
+const bezelGeo = new THREE.TorusGeometry(1.22, 0.08, 16, 64);
+const bezel = new THREE.Mesh(bezelGeo, goldMat);
+bezel.position.z = 0.17;
+watchGroup.add(bezel);
+
+// Back bezel ring
+const bezelBack = new THREE.Mesh(bezelGeo, goldMat);
+bezelBack.position.z = -0.17;
+watchGroup.add(bezelBack);
+
+// Dial face
+const dialGeo = new THREE.CircleGeometry(1.1, 64);
+const dial = new THREE.Mesh(dialGeo, dialMat);
+dial.position.z = 0.178;
+watchGroup.add(dial);
+
+// Caseback
+const casebackMat = new THREE.MeshStandardMaterial({
+  color: new THREE.Color(0x15182a),
+  metalness: 0.8,
+  roughness: 0.3,
+});
+const caseback = new THREE.Mesh(new THREE.CircleGeometry(1.1, 64), casebackMat);
+caseback.position.z = -0.178;
+caseback.rotation.y = Math.PI;
+watchGroup.add(caseback);
+
+// Caseback engraving rings
+for (let r = 0.3; r <= 0.9; r += 0.3) {
+  const ringGeo = new THREE.TorusGeometry(r, 0.008, 8, 64);
+  const ring = new THREE.Mesh(ringGeo, goldMat.clone());
+  ring.material.emissive = goldColor;
+  ring.material.emissiveIntensity = 0.15;
+  ring.position.z = -0.179;
+  ring.rotation.y = Math.PI;
+  watchGroup.add(ring);
+}
+
+// Tick marks
+for (let i = 0; i < 12; i++) {
+  const angle = (i / 12) * Math.PI * 2;
+  const isMain = i % 3 === 0;
+  const len = isMain ? 0.15 : 0.08;
+  const width = isMain ? 0.025 : 0.015;
+  const tickGeo = new THREE.BoxGeometry(width, len, 0.01);
+  const tick = new THREE.Mesh(tickGeo, handMat);
+  const radius = 0.98;
+  tick.position.x = Math.sin(angle) * radius;
+  tick.position.y = Math.cos(angle) * radius;
+  tick.position.z = 0.185;
+  tick.rotation.z = -angle;
+  watchGroup.add(tick);
+}
+
+// Minute ticks
+for (let i = 0; i < 60; i++) {
+  if (i % 5 === 0) continue;
+  const angle = (i / 60) * Math.PI * 2;
+  const tickGeo = new THREE.BoxGeometry(0.008, 0.04, 0.008);
+  const tick = new THREE.Mesh(tickGeo, goldMat);
+  tick.position.x = Math.sin(angle) * 1.0;
+  tick.position.y = Math.cos(angle) * 1.0;
+  tick.position.z = 0.183;
+  tick.rotation.z = -angle;
+  watchGroup.add(tick);
+}
+
+// Hour hand
+const hourHandGeo = new THREE.BoxGeometry(0.04, 0.55, 0.015);
+const hourHand = new THREE.Mesh(hourHandGeo, handMat);
+hourHand.position.y = 0.25;
+hourHand.position.z = 0.195;
+const hourPivot = new THREE.Group();
+hourPivot.add(hourHand);
+hourPivot.rotation.z = -Math.PI / 6; // ~10:10
+watchGroup.add(hourPivot);
+
+// Minute hand
+const minuteHandGeo = new THREE.BoxGeometry(0.028, 0.78, 0.012);
+const minuteHand = new THREE.Mesh(minuteHandGeo, handMat);
+minuteHand.position.y = 0.37;
+minuteHand.position.z = 0.20;
+const minutePivot = new THREE.Group();
+minutePivot.add(minuteHand);
+minutePivot.rotation.z = Math.PI / 6; // ~10:10
+watchGroup.add(minutePivot);
+
+// Center cap
+const capGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.03, 16);
+const cap = new THREE.Mesh(capGeo, goldMat);
+cap.rotation.x = Math.PI / 2;
+cap.position.z = 0.21;
+watchGroup.add(cap);
+
+// Crown (on the right side)
+const crownGeo = new THREE.TorusGeometry(0.1, 0.045, 12, 16);
+const crown = new THREE.Mesh(crownGeo, goldMat);
+crown.position.x = 1.42;
+crown.position.z = 0;
+crown.rotation.y = Math.PI / 2;
+watchGroup.add(crown);
+
+// Crown stem
+const stemGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.2, 12);
+const stem = new THREE.Mesh(stemGeo, goldMat);
+stem.rotation.z = Math.PI / 2;
+stem.position.x = 1.3;
+watchGroup.add(stem);
+
+// Crown ridges
+for (let i = 0; i < 8; i++) {
+  const ridgeAngle = (i / 8) * Math.PI * 2;
+  const ridgeGeo = new THREE.BoxGeometry(0.015, 0.008, 0.09);
+  const ridge = new THREE.Mesh(ridgeGeo, goldMat);
+  ridge.position.x = 1.42;
+  ridge.position.y = Math.cos(ridgeAngle) * 0.13;
+  ridge.position.z = Math.sin(ridgeAngle) * 0.13;
+  watchGroup.add(ridge);
+}
+
+// Lugs (top-left, top-right, bottom-left, bottom-right)
+const lugGeo = new THREE.BoxGeometry(0.18, 0.45, 0.2);
+const lugMat = bodyMat;
+const lugPositions = [
+  { x: -0.85, y: 1.2, rz: 0.2 },
+  { x: 0.85, y: 1.2, rz: -0.2 },
+  { x: -0.85, y: -1.2, rz: -0.2 },
+  { x: 0.85, y: -1.2, rz: 0.2 },
+];
+lugPositions.forEach(pos => {
+  const lug = new THREE.Mesh(lugGeo, lugMat);
+  lug.position.set(pos.x, pos.y, 0);
+  lug.rotation.z = pos.rz;
+  watchGroup.add(lug);
+});
+
+// Sub-dial (small seconds) at 6 o'clock
+const subDialGeo = new THREE.RingGeometry(0.18, 0.22, 32);
+const subDial = new THREE.Mesh(subDialGeo, goldMat);
+subDial.position.set(0, -0.5, 0.183);
+watchGroup.add(subDial);
+
+// Small second hand
+const secHandGeo = new THREE.BoxGeometry(0.012, 0.18, 0.008);
+const secHand = new THREE.Mesh(secHandGeo, handMat);
+secHand.position.y = 0.08;
+const secPivot = new THREE.Group();
+secPivot.add(secHand);
+secPivot.position.set(0, -0.5, 0.19);
+watchGroup.add(secPivot);
+
+// Initial rotation: show the back
+watchGroup.rotation.y = Math.PI;
+scene.add(watchGroup);
+
+// ---------- Lighting ----------
+// Key light (warm)
+const keyLight = new THREE.DirectionalLight(0xffeedd, 2.2);
+keyLight.position.set(3, 4, 5);
+scene.add(keyLight);
+
+// Fill light (cool)
+const fillLight = new THREE.DirectionalLight(0xaabbdd, 0.8);
+fillLight.position.set(-4, 1, 3);
+scene.add(fillLight);
+
+// Rim / back light
+const rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
+rimLight.position.set(0, 0, -5);
+scene.add(rimLight);
+
+// Ambient
+const ambientLight = new THREE.AmbientLight(0x334466, 0.4);
+scene.add(ambientLight);
+
+// Subtle point light for dial sparkle
+const dialLight = new THREE.PointLight(0xc9a84c, 0.6, 5);
+dialLight.position.set(0, 1, 3);
+scene.add(dialLight);
+
+// ---------- Scroll keyframes ----------
+// Each section: { rotX, rotY, rotZ, camZ, camX, camY }
+const keyframes = [
+  // Section 0: Back facing -> front reveal
+  { start: { ry: Math.PI, rx: 0, rz: 0, cz: 6, cx: 0, cy: 0 },
+    end:   { ry: 0,       rx: 0, rz: 0, cz: 5, cx: 0, cy: 0 } },
+  // Section 1: Front -> side tilt (show crown)
+  { start: { ry: 0,           rx: 0,    rz: 0,    cz: 5,   cx: 0,   cy: 0 },
+    end:   { ry: -Math.PI/2.5, rx: 0.15, rz: 0.05, cz: 4.5, cx: 0.3, cy: 0.2 } },
+  // Section 2: Zoom into dial
+  { start: { ry: -Math.PI/2.5, rx: 0.15, rz: 0.05, cz: 4.5, cx: 0.3, cy: 0.2 },
+    end:   { ry: -0.1,         rx: 0.1,  rz: 0,    cz: 3.2, cx: 0,   cy: 0 } },
+  // Section 3: Show caseback
+  { start: { ry: -0.1,      rx: 0.1, rz: 0,     cz: 3.2, cx: 0,   cy: 0 },
+    end:   { ry: Math.PI,   rx: 0.1, rz: -0.05, cz: 4.5, cx: -0.2, cy: 0 } },
+  // Section 4: Return to hero
+  { start: { ry: Math.PI, rx: 0.1,  rz: -0.05, cz: 4.5, cx: -0.2, cy: 0 },
+    end:   { ry: 2*Math.PI, rx: 0, rz: 0,      cz: 5.5, cx: 0,    cy: 0 } },
+];
+
+// ---------- Scroll tracking ----------
+let scrollProgress = 0;
+let currentSection = 0;
+
+const sectionContents = document.querySelectorAll('.section-content');
+const dots = document.querySelectorAll('.dot');
+const scrollHint = document.getElementById('scrollHint');
+const progressBar = document.getElementById('progressBar');
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function easeInOutCubic(t) {
+  return t < 0.5
+    ? 4 * t * t * t
+    : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function updateScroll() {
+  const scrollTop = window.scrollY;
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  scrollProgress = Math.min(Math.max(scrollTop / maxScroll, 0), 1);
+
+  // Progress bar
+  progressBar.style.width = (scrollProgress * 100) + '%';
+
+  // Current section (0-4)
+  const rawSection = scrollProgress * 5;
+  currentSection = Math.min(Math.floor(rawSection), 4);
+  const sectionT = rawSection - currentSection;
+  const easedT = easeInOutCubic(sectionT);
+
+  // Interpolate keyframe
+  const kf = keyframes[currentSection];
+  const ry = lerp(kf.start.ry, kf.end.ry, easedT);
+  const rx = lerp(kf.start.rx, kf.end.rx, easedT);
+  const rz = lerp(kf.start.rz, kf.end.rz, easedT);
+  const cz = lerp(kf.start.cz, kf.end.cz, easedT);
+  const cx = lerp(kf.start.cx, kf.end.cx, easedT);
+  const cy = lerp(kf.start.cy, kf.end.cy, easedT);
+
+  watchGroup.rotation.y = ry;
+  watchGroup.rotation.x = rx;
+  watchGroup.rotation.z = rz;
+  camera.position.z = cz;
+  camera.position.x = cx;
+  camera.position.y = cy;
+  camera.lookAt(0, 0, 0);
+
+  // Show/hide sections
+  sectionContents.forEach((el, i) => {
+    const isActive = i === currentSection;
+    // Fade in when within the section, give it some margin
+    const sectionStart = i / 5;
+    const sectionEnd = (i + 1) / 5;
+    const sectionMid = sectionStart + (sectionEnd - sectionStart) * 0.15;
+    const sectionFadeOut = sectionEnd - (sectionEnd - sectionStart) * 0.1;
+
+    if (scrollProgress >= sectionMid && scrollProgress < sectionFadeOut) {
+      el.classList.add('visible');
+    } else {
+      el.classList.remove('visible');
+    }
+  });
+
+  // Always show hero for first bit
+  if (scrollProgress < 0.15) {
+    sectionContents[0].classList.add('visible');
+  }
+
+  // Dots
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentSection);
+  });
+
+  // Scroll hint
+  scrollHint.classList.toggle('hidden', scrollProgress > 0.05);
+}
+
+// Animate the small seconds hand continuously
+let time = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.01;
+  secPivot.rotation.z = -time * 0.5;
+  renderer.render(scene, camera);
+}
+
+// Events
+window.addEventListener('scroll', updateScroll, { passive: true });
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Dot click navigation
+dots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    const index = parseInt(dot.dataset.index);
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const targetScroll = (index / 5 + 0.02) * maxScroll;
+    window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+  });
+});
+
+// Init
+updateScroll();
+animate();
+</script>
+</body>
+</html>

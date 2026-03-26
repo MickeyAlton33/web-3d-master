@@ -1,0 +1,20 @@
+{
+  "name": "web-3d-master-marketplace",
+  "description": "3D web development mastery skill for Claude Code",
+  "owner": {
+    "name": "Mickey Alton"
+  },
+  "plugins": [
+    {
+      "name": "web-3d-master",
+      "source": "./",
+      "description": "Transforms Claude into a 3D web development expert. Patterns from 96 award-winning 3D websites.",
+      "version": "1.0.0",
+      "author": { "name": "Mickey Alton" },
+      "homepage": "https://github.com/MickeyAlton33/web-3d-master",
+      "repository": "https://github.com/MickeyAlton33/web-3d-master",
+      "license": "MIT",
+      "keywords": ["3d", "threejs", "webgl", "shaders", "r3f", "spline"]
+    }
+  ]
+}

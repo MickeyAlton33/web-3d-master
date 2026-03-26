@@ -1,0 +1,10 @@
+{
+  "name": "web-3d-master",
+  "displayName": "Web 3D Master",
+  "description": "3D web development mastery. Three.js, R3F, WebGL, shaders, particles, scroll-driven 3D.",
+  "version": "1.0.0",
+  "author": { "name": "Mickey Alton" },
+  "homepage": "https://github.com/MickeyAlton33/web-3d-master",
+  "repository": "https://github.com/MickeyAlton33/web-3d-master",
+  "license": "MIT"
+}

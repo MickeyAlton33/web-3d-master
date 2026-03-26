@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GENESIS AI - Morphing Mesh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #050510;
+    --purple: #8b5cf6;
+    --cyan: #06b6d4;
+    --text: #ffffff;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  canvas#scene {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+  }
+
+  .scroll-container {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .section {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 8vw;
+    position: relative;
+  }
+
+  .section-content {
+    max-width: 600px;
+  }
+
+  .section-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(0.65rem, 1vw, 0.85rem);
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 700;
+    line-height: 1.05;
+    margin-bottom: 1.2rem;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease 0.15s, transform 0.8s ease 0.15s;
+    background: linear-gradient(135deg, var(--text) 60%, var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .section-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(1rem, 1.8vw, 1.35rem);
+    font-weight: 300;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s;
+  }
+
+  .section.visible .section-label,
+  .section.visible .section-title,
+  .section.visible .section-subtitle {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--purple), var(--cyan));
+    z-index: 10;
+    transition: width 0.1s linear;
+  }
+
+  .shape-indicator {
+    position: fixed;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  .shape-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    background: transparent;
+    transition: all 0.4s ease;
+  }
+
+  .shape-dot.active {
+    background: var(--purple);
+    box-shadow: 0 0 12px var(--purple);
+    transform: scale(1.4);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section-label, .section-title, .section-subtitle {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    canvas#scene { display: none; }
+    .progress-bar, .shape-indicator { display: none; }
+    body { background: #0a0a1a; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="shape-indicator" id="shapeIndicator">
+  <div class="shape-dot active" data-index="0"></div>
+  <div class="shape-dot" data-index="1"></div>
+  <div class="shape-dot" data-index="2"></div>
+  <div class="shape-dot" data-index="3"></div>
+</div>
+
+<div class="scroll-container">
+  <section class="section" data-index="0">
+    <div class="section-content">
+      <div class="section-label">Phase 01</div>
+      <h1 class="section-title">GENESIS AI</h1>
+      <p class="section-subtitle">Shaping intelligence</p>
+    </div>
+  </section>
+  <section class="section" data-index="1">
+    <div class="section-content">
+      <div class="section-label">Phase 02</div>
+      <h1 class="section-title">COMPLEXITY</h1>
+      <p class="section-subtitle">We solve what others can't</p>
+    </div>
+  </section>
+  <section class="section" data-index="2">
+    <div class="section-content">
+      <div class="section-label">Phase 03</div>
+      <h1 class="section-title">PRECISION</h1>
+      <p class="section-subtitle">Every parameter matters</p>
+    </div>
+  </section>
+  <section class="section" data-index="3">
+    <div class="section-content">
+      <div class="section-label">Phase 04</div>
+      <h1 class="section-title">CONVERGENCE</h1>
+      <p class="section-subtitle">All paths lead here</p>
+    </div>
+  </section>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ──────────────────────────────────────────────
+// Simplex noise (compact 3D implementation)
+// ──────────────────────────────────────────────
+const snoise = (() => {
+  const grad3 = [
+    [1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],
+    [1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],
+    [0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]
+  ];
+  const perm = new Uint8Array(512);
+  const p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,
+    69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,
+    203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,
+    165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,
+    92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,
+    89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,
+    226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,
+    182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,
+    43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,
+    228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,
+    49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,
+    236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
+  for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+
+  function dot3(g, x, y, z) { return g[0]*x + g[1]*y + g[2]*z; }
+
+  const F3 = 1/3, G3 = 1/6;
+
+  return function(x, y, z) {
+    const s = (x+y+z)*F3;
+    const i = Math.floor(x+s), j = Math.floor(y+s), k = Math.floor(z+s);
+    const t = (i+j+k)*G3;
+    const X0 = i-t, Y0 = j-t, Z0 = k-t;
+    const x0 = x-X0, y0 = y-Y0, z0 = z-Z0;
+    let i1,j1,k1,i2,j2,k2;
+    if (x0>=y0) {
+      if (y0>=z0) {i1=1;j1=0;k1=0;i2=1;j2=1;k2=0;}
+      else if (x0>=z0) {i1=1;j1=0;k1=0;i2=1;j2=0;k2=1;}
+      else {i1=0;j1=0;k1=1;i2=1;j2=0;k2=1;}
+    } else {
+      if (y0<z0) {i1=0;j1=0;k1=1;i2=0;j2=1;k2=1;}
+      else if (x0<z0) {i1=0;j1=1;k1=0;i2=0;j2=1;k2=1;}
+      else {i1=0;j1=1;k1=0;i2=1;j2=1;k2=0;}
+    }
+    const x1=x0-i1+G3, y1=y0-j1+G3, z1=z0-k1+G3;
+    const x2=x0-i2+2*G3, y2=y0-j2+2*G3, z2=z0-k2+2*G3;
+    const x3=x0-1+3*G3, y3=y0-1+3*G3, z3=z0-1+3*G3;
+    const ii=i&255, jj=j&255, kk=k&255;
+    let n0=0,n1=0,n2=0,n3=0;
+    let t0 = 0.6-x0*x0-y0*y0-z0*z0;
+    if (t0>0) { t0*=t0; n0=t0*t0*dot3(grad3[perm[ii+perm[jj+perm[kk]]]%12],x0,y0,z0); }
+    let t1 = 0.6-x1*x1-y1*y1-z1*z1;
+    if (t1>0) { t1*=t1; n1=t1*t1*dot3(grad3[perm[ii+i1+perm[jj+j1+perm[kk+k1]]]%12],x1,y1,z1); }
+    let t2 = 0.6-x2*x2-y2*y2-z2*z2;
+    if (t2>0) { t2*=t2; n2=t2*t2*dot3(grad3[perm[ii+i2+perm[jj+j2+perm[kk+k2]]]%12],x2,y2,z2); }
+    let t3 = 0.6-x3*x3-y3*y3-z3*z3;
+    if (t3>0) { t3*=t3; n3=t3*t3*dot3(grad3[perm[ii+1+perm[jj+1+perm[kk+1]]]%12],x3,y3,z3); }
+    return 32*(n0+n1+n2+n3);
+  };
+})();
+
+// ──────────────────────────────────────────────
+// Scene setup
+// ──────────────────────────────────────────────
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x050510, 1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(3, 1.5, 5);
+camera.lookAt(0, 0, 0);
+
+// Lights
+const spotLight = new THREE.SpotLight(0xfff5e6, 40);
+spotLight.position.set(0, 8, 3);
+spotLight.angle = Math.PI / 4;
+spotLight.penumbra = 0.8;
+spotLight.decay = 1.5;
+scene.add(spotLight);
+
+const hemiLight = new THREE.HemisphereLight(0x8b5cf6, 0x050510, 0.6);
+scene.add(hemiLight);
+
+const rimLight = new THREE.PointLight(0x06b6d4, 8, 20);
+rimLight.position.set(-4, -2, -3);
+scene.add(rimLight);
+
+// ──────────────────────────────────────────────
+// Generate geometry position arrays (all normalized to same vertex count)
+// ──────────────────────────────────────────────
+const DETAIL = 32;
+const RADIUS = 1.8;
+
+function makeGeometry(type) {
+  switch(type) {
+    case 0: return new THREE.IcosahedronGeometry(RADIUS, 4);
+    case 1: return new THREE.TorusKnotGeometry(RADIUS * 0.65, RADIUS * 0.25, 128, 32);
+    case 2: return new THREE.OctahedronGeometry(RADIUS, 4);
+    case 3: return new THREE.SphereGeometry(RADIUS, 64, 32);
+  }
+}
+
+// We need all geometries to share the same vertex count.
+// Strategy: use a sphere as the base topology, and for each shape,
+// project sphere vertices onto the target shape's surface via raycasting
+// or map them parametrically. Simpler: resample all to same count.
+
+// Actually, the cleanest approach: create a high-res sphere as the base mesh,
+// and store target positions for each shape by sampling closest surface points.
+
+const baseGeo = new THREE.SphereGeometry(RADIUS, 80, 40);
+const vertCount = baseGeo.attributes.position.count;
+const basePositions = new Float32Array(baseGeo.attributes.position.array);
+
+// For each target shape, map base sphere vertices to the target surface
+function projectToShape(targetGeo) {
+  const tPos = targetGeo.attributes.position;
+  const result = new Float32Array(vertCount * 3);
+
+  // Build array of target vertices
+  const tVerts = [];
+  for (let i = 0; i < tPos.count; i++) {
+    tVerts.push(new THREE.Vector3(tPos.getX(i), tPos.getY(i), tPos.getZ(i)));
+  }
+
+  // For each base vertex, find closest target vertex and blend
+  const bv = new THREE.Vector3();
+  for (let i = 0; i < vertCount; i++) {
+    bv.set(basePositions[i*3], basePositions[i*3+1], basePositions[i*3+2]);
+
+    // Find closest target vertex
+    let minDist = Infinity, closest = null;
+    for (let j = 0; j < tVerts.length; j++) {
+      const d = bv.distanceToSquared(tVerts[j]);
+      if (d < minDist) { minDist = d; closest = tVerts[j]; }
+    }
+    result[i*3]   = closest.x;
+    result[i*3+1] = closest.y;
+    result[i*3+2] = closest.z;
+  }
+  return result;
+}
+
+// For icosahedron and octahedron and sphere, vertices are already on a sphere-like surface
+// so a simpler approach: normalize base vertex direction, then sample the target along that ray
+
+function projectViaRay(targetGeo) {
+  const result = new Float32Array(vertCount * 3);
+  const dir = new THREE.Vector3();
+  const raycaster = new THREE.Raycaster();
+
+  // Create temporary mesh for raycasting
+  const tempMesh = new THREE.Mesh(targetGeo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+
+  for (let i = 0; i < vertCount; i++) {
+    dir.set(basePositions[i*3], basePositions[i*3+1], basePositions[i*3+2]).normalize();
+
+    // Raycast from origin outward
+    raycaster.set(new THREE.Vector3(0,0,0), dir);
+    const hits = raycaster.intersectObject(tempMesh);
+
+    if (hits.length > 0) {
+      const p = hits[0].point;
+      result[i*3]   = p.x;
+      result[i*3+1] = p.y;
+      result[i*3+2] = p.z;
+    } else {
+      // Fallback: scale base position to roughly match
+      result[i*3]   = basePositions[i*3];
+      result[i*3+1] = basePositions[i*3+1];
+      result[i*3+2] = basePositions[i*3+2];
+    }
+  }
+
+  tempMesh.geometry.dispose();
+  tempMesh.material.dispose();
+  return result;
+}
+
+// Generate target position arrays
+const shapePositions = [];
+for (let s = 0; s < 4; s++) {
+  const geo = makeGeometry(s);
+  // Ensure index for raycasting
+  if (!geo.index) {
+    const idx = [];
+    for (let i = 0; i < geo.attributes.position.count; i++) idx.push(i);
+    // Need proper triangles -- let's compute index properly
+  }
+  shapePositions.push(projectViaRay(geo));
+  geo.dispose();
+}
+
+// Store original normals for noise displacement
+const baseNormals = new Float32Array(baseGeo.attributes.normal.array);
+
+// ──────────────────────────────────────────────
+// Main morphing mesh
+// ──────────────────────────────────────────────
+const morphGeo = baseGeo.clone();
+const morphMat = new THREE.MeshStandardMaterial({
+  color: 0x1a1a2e,
+  metalness: 0.8,
+  roughness: 0.2,
+  emissive: 0x8b5cf6,
+  emissiveIntensity: 0.35,
+  side: THREE.FrontSide,
+});
+
+const morphMesh = new THREE.Mesh(morphGeo, morphMat);
+scene.add(morphMesh);
+
+// Wireframe overlay
+const wireGeo = baseGeo.clone();
+const wireMat = new THREE.MeshBasicMaterial({
+  color: 0x8b5cf6,
+  wireframe: true,
+  transparent: true,
+  opacity: 0.15,
+});
+const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+wireMesh.scale.setScalar(1.05);
+scene.add(wireMesh);
+
+// ──────────────────────────────────────────────
+// Particle burst system (morph particles)
+// ──────────────────────────────────────────────
+const BURST_COUNT = 200;
+const burstPositions = new Float32Array(BURST_COUNT * 3);
+const burstVelocities = new Float32Array(BURST_COUNT * 3);
+const burstLifetimes = new Float32Array(BURST_COUNT); // 0 = dead
+const burstAlphas = new Float32Array(BURST_COUNT);
+
+const burstGeo = new THREE.BufferGeometry();
+burstGeo.setAttribute('position', new THREE.BufferAttribute(burstPositions, 3));
+
+const burstMat = new THREE.PointsMaterial({
+  color: 0x8b5cf6,
+  size: 0.04,
+  transparent: true,
+  opacity: 0.9,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+const burstPoints = new THREE.Points(burstGeo, burstMat);
+scene.add(burstPoints);
+
+function emitBurst() {
+  const posAttr = morphGeo.attributes.position;
+  for (let i = 0; i < BURST_COUNT; i++) {
+    // Pick a random vertex on the mesh surface
+    const vi = Math.floor(Math.random() * vertCount);
+    burstPositions[i*3]   = posAttr.getX(vi);
+    burstPositions[i*3+1] = posAttr.getY(vi);
+    burstPositions[i*3+2] = posAttr.getZ(vi);
+
+    // Velocity: outward from center + some randomness
+    const nx = posAttr.getX(vi);
+    const ny = posAttr.getY(vi);
+    const nz = posAttr.getZ(vi);
+    const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
+    const speed = 0.02 + Math.random() * 0.04;
+    burstVelocities[i*3]   = (nx/len) * speed + (Math.random()-0.5)*0.01;
+    burstVelocities[i*3+1] = (ny/len) * speed + (Math.random()-0.5)*0.01;
+    burstVelocities[i*3+2] = (nz/len) * speed + (Math.random()-0.5)*0.01;
+
+    burstLifetimes[i] = 1.0;
+  }
+}
+
+function updateBurst(dt) {
+  let anyAlive = false;
+  for (let i = 0; i < BURST_COUNT; i++) {
+    if (burstLifetimes[i] <= 0) continue;
+    anyAlive = true;
+    burstLifetimes[i] -= dt * 0.8;
+    if (burstLifetimes[i] < 0) burstLifetimes[i] = 0;
+
+    burstPositions[i*3]   += burstVelocities[i*3];
+    burstPositions[i*3+1] += burstVelocities[i*3+1];
+    burstPositions[i*3+2] += burstVelocities[i*3+2];
+
+    // Slow down
+    burstVelocities[i*3]   *= 0.97;
+    burstVelocities[i*3+1] *= 0.97;
+    burstVelocities[i*3+2] *= 0.97;
+  }
+  burstGeo.attributes.position.needsUpdate = true;
+  burstMat.opacity = anyAlive ? 0.9 : 0;
+}
+
+// ──────────────────────────────────────────────
+// Ambient background particles
+// ──────────────────────────────────────────────
+const BG_COUNT = 2000;
+const bgPositions = new Float32Array(BG_COUNT * 3);
+const bgVelocities = new Float32Array(BG_COUNT * 3);
+
+for (let i = 0; i < BG_COUNT; i++) {
+  // Distribute in a large sphere
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  const r = 8 + Math.random() * 25;
+  bgPositions[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+  bgPositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+  bgPositions[i*3+2] = r * Math.cos(phi);
+
+  bgVelocities[i*3]   = (Math.random() - 0.5) * 0.002;
+  bgVelocities[i*3+1] = (Math.random() - 0.5) * 0.002;
+  bgVelocities[i*3+2] = (Math.random() - 0.5) * 0.002;
+}
+
+const bgGeo = new THREE.BufferGeometry();
+bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
+const bgMat = new THREE.PointsMaterial({
+  color: 0x8b5cf6,
+  size: 0.035,
+  transparent: true,
+  opacity: 0.4,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+const bgPoints = new THREE.Points(bgGeo, bgMat);
+scene.add(bgPoints);
+
+function updateBGParticles() {
+  for (let i = 0; i < BG_COUNT; i++) {
+    bgPositions[i*3]   += bgVelocities[i*3];
+    bgPositions[i*3+1] += bgVelocities[i*3+1];
+    bgPositions[i*3+2] += bgVelocities[i*3+2];
+  }
+  bgGeo.attributes.position.needsUpdate = true;
+}
+
+// ──────────────────────────────────────────────
+// Scroll tracking
+// ──────────────────────────────────────────────
+let scrollProgress = 0;
+let prevShapeIndex = 0;
+
+function getScrollProgress() {
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  return maxScroll > 0 ? window.scrollY / maxScroll : 0;
+}
+
+window.addEventListener('scroll', () => {
+  scrollProgress = getScrollProgress();
+
+  // Update progress bar
+  document.getElementById('progressBar').style.width = (scrollProgress * 100) + '%';
+
+  // Determine current shape index
+  const shapeIndex = Math.min(3, Math.floor(scrollProgress * 4));
+
+  // Emit burst on shape change
+  if (shapeIndex !== prevShapeIndex) {
+    emitBurst();
+    prevShapeIndex = shapeIndex;
+  }
+
+  // Update shape indicator dots
+  const dots = document.querySelectorAll('.shape-dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('active', i === shapeIndex);
+  });
+}, { passive: true });
+
+// ──────────────────────────────────────────────
+// Intersection Observer for text animation
+// ──────────────────────────────────────────────
+const sections = document.querySelectorAll('.section');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    } else {
+      entry.target.classList.remove('visible');
+    }
+  });
+}, { threshold: 0.4 });
+
+sections.forEach(s => observer.observe(s));
+
+// ──────────────────────────────────────────────
+// Morph + noise displacement
+// ──────────────────────────────────────────────
+function morphMeshUpdate(time) {
+  const posAttr = morphGeo.attributes.position;
+  const wireAttr = wireGeo.attributes.position;
+
+  // Determine which two shapes we're blending between
+  const continuous = scrollProgress * 4; // 0..4
+  const fromIndex = Math.min(3, Math.floor(continuous));
+  const toIndex = Math.min(3, fromIndex + 1);
+  const fraction = continuous - fromIndex; // 0..1 within the quarter
+
+  // Smooth easing
+  const t = fraction < 0.5
+    ? 4 * fraction * fraction * fraction
+    : 1 - Math.pow(-2 * fraction + 2, 3) / 2;
+
+  const fromArr = shapePositions[fromIndex];
+  const toArr = shapePositions[toIndex];
+
+  const noiseScale = 0.8;
+  const noiseAmp = 0.08;
+  const breathe = Math.sin(time * 0.5) * 0.03 + noiseAmp;
+
+  for (let i = 0; i < vertCount; i++) {
+    const i3 = i * 3;
+
+    // Lerp between shapes
+    const bx = fromArr[i3]   + (toArr[i3]   - fromArr[i3])   * t;
+    const by = fromArr[i3+1] + (toArr[i3+1] - fromArr[i3+1]) * t;
+    const bz = fromArr[i3+2] + (toArr[i3+2] - fromArr[i3+2]) * t;
+
+    // Simplex noise displacement along original normal
+    const n = snoise(bx * noiseScale + time * 0.3, by * noiseScale + time * 0.2, bz * noiseScale + time * 0.25);
+    const nx = baseNormals[i3];
+    const ny = baseNormals[i3+1];
+    const nz = baseNormals[i3+2];
+
+    posAttr.setXYZ(i, bx + nx * n * breathe, by + ny * n * breathe, bz + nz * n * breathe);
+    wireAttr.setXYZ(i, bx + nx * n * breathe, by + ny * n * breathe, bz + nz * n * breathe);
+  }
+
+  posAttr.needsUpdate = true;
+  wireAttr.needsUpdate = true;
+  morphGeo.computeVertexNormals();
+}
+
+// ──────────────────────────────────────────────
+// Animation loop
+// ──────────────────────────────────────────────
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const elapsed = clock.getElapsedTime();
+  const dt = clock.getDelta();
+
+  // Gentle mesh rotation
+  morphMesh.rotation.y = elapsed * 0.12;
+  morphMesh.rotation.x = Math.sin(elapsed * 0.08) * 0.15;
+  wireMesh.rotation.copy(morphMesh.rotation);
+
+  // Morph + noise
+  morphMeshUpdate(elapsed);
+
+  // Update burst particles
+  updateBurst(dt || 0.016);
+
+  // Update BG particles
+  updateBGParticles();
+
+  // Slight camera bob
+  camera.position.y = 1.5 + Math.sin(elapsed * 0.3) * 0.15;
+
+  // Pulse emissive
+  morphMat.emissiveIntensity = 0.3 + Math.sin(elapsed * 1.5) * 0.1;
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// ──────────────────────────────────────────────
+// Resize
+// ──────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Trigger initial section visibility
+setTimeout(() => {
+  sections[0].classList.add('visible');
+}, 100);
+</script>
+</body>
+</html>

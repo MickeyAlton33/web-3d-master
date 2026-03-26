@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS PROTOCOL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #070b14;
+    --cyan: #00d4ff;
+    --purple: #7b61ff;
+    --white: #e8edf5;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- Hero ---- */
+  .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 700px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #globe-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    cursor: grab;
+  }
+  #globe-canvas:active { cursor: grabbing; }
+
+  .globe-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 600px; height: 600px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,212,255,0.12) 0%, rgba(0,212,255,0.04) 40%, transparent 70%);
+    animation: pulse-glow 4s ease-in-out infinite;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    pointer-events: none;
+    margin-top: 340px;
+  }
+
+  .hero-content h1 {
+    font-size: clamp(2.4rem, 6vw, 4.5rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--white) 0%, var(--cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.05;
+  }
+
+  .hero-content p {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    font-weight: 300;
+    color: rgba(232,237,245,0.55);
+    margin-top: 16px;
+    letter-spacing: 0.04em;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.4;
+    animation: bob 2s ease-in-out infinite;
+  }
+  .scroll-hint span { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; }
+  .scroll-hint .arrow { width: 1px; height: 28px; background: var(--cyan); }
+
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+  }
+
+  /* ---- Stats ---- */
+  .stats {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    max-width: 1100px;
+    margin: -60px auto 0;
+    padding: 0 24px;
+  }
+
+  .stat-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .stat-card .number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-card .label {
+    font-size: 0.82rem;
+    color: rgba(232,237,245,0.45);
+    margin-top: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---- Features ---- */
+  .features {
+    max-width: 1100px;
+    margin: 120px auto;
+    padding: 0 24px;
+  }
+
+  .features h2 {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 64px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .feature-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 40px 32px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .feature-card:hover {
+    border-color: rgba(0,212,255,0.2);
+    transform: translateY(-4px);
+  }
+
+  .feature-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(123,97,255,0.15));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+  }
+
+  .feature-card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  .feature-card p {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: rgba(232,237,245,0.5);
+  }
+
+  /* ---- CTA ---- */
+  .cta {
+    text-align: center;
+    padding: 80px 24px 120px;
+  }
+
+  .cta h2 {
+    font-size: 2.6rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    padding: 16px 48px;
+    border: none;
+    border-radius: 60px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: #fff;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.3s;
+    text-decoration: none;
+  }
+  .cta-btn:hover {
+    transform: scale(1.04);
+    box-shadow: 0 0 40px rgba(0,212,255,0.3);
+  }
+
+  /* ---- Reduced motion ---- */
+  @media (prefers-reduced-motion: reduce) {
+    .globe-glow { animation: none; opacity: 0.7; }
+    .scroll-hint { animation: none; }
+    .feature-card { transition: none; }
+    .cta-btn { transition: none; }
+  }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 900px) {
+    .stats { grid-template-columns: repeat(2, 1fr); margin-top: -40px; }
+    .features-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 550px) {
+    .stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="globe-glow"></div>
+  <canvas id="globe-canvas"></canvas>
+  <div class="hero-content">
+    <h1>NEXUS PROTOCOL</h1>
+    <p>The decentralized intelligence network</p>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="arrow"></div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="stat-card">
+    <div class="number" data-target="2.4" data-suffix="M+" data-decimals="1">0</div>
+    <div class="label">Verified Humans</div>
+  </div>
+  <div class="stat-card">
+    <div class="number" data-target="180" data-suffix="+" data-decimals="0">0</div>
+    <div class="label">Countries</div>
+  </div>
+  <div class="stat-card">
+    <div class="number" data-target="99.9" data-suffix="%" data-decimals="1">0</div>
+    <div class="label">Uptime</div>
+  </div>
+  <div class="stat-card">
+    <div class="number" data-prefix="< " data-target="50" data-suffix="ms" data-decimals="0">0</div>
+    <div class="label">Latency</div>
+  </div>
+</section>
+
+<section class="features">
+  <h2>Why Nexus</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">&#9878;</div>
+      <h3>Proof of Personhood</h3>
+      <p>Privacy-preserving biometric verification ensures every participant is a unique human — no bots, no duplicates, no surveillance.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#9881;</div>
+      <h3>Adaptive Consensus</h3>
+      <p>Our DAG-based consensus layer processes 50,000 TPS while maintaining Byzantine fault tolerance across 180+ sovereign validator sets.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#10038;</div>
+      <h3>Neural Governance</h3>
+      <p>AI-assisted proposal analysis and quadratic voting empower the community to make informed, equitable decisions at global scale.</p>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Ready to join the network?</h2>
+  <a href="#" class="cta-btn">Join the Network</a>
+</section>
+
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+
+/* ============================================================
+   Respect prefers-reduced-motion
+   ============================================================ */
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============================================================
+   Scene, Camera, Renderer
+   ============================================================ */
+const canvas = document.getElementById('globe-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0.6, 6.5);
+camera.lookAt(0, 0, 0);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ============================================================
+   Globe Shader Material
+   ============================================================ */
+const globeVert = `
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+  void main() {
+    vUv = uv;
+    vNormal = normalize(normalMatrix * normal);
+    vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const globeFrag = `
+  uniform float uTime;
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+
+  void main() {
+    // Grid
+    vec2 grid = fract(vUv * 20.0);
+    float lineX = smoothstep(0.02, 0.0, grid.x) + smoothstep(0.98, 1.0, grid.x);
+    float lineY = smoothstep(0.02, 0.0, grid.y) + smoothstep(0.98, 1.0, grid.y);
+    float gridLine = clamp(lineX + lineY, 0.0, 1.0);
+
+    // Fresnel
+    vec3 viewDir = normalize(-vPosition);
+    float fresnel = 1.0 - dot(viewDir, vNormal);
+    fresnel = pow(fresnel, 2.5);
+
+    // Base color
+    vec3 base = vec3(0.039, 0.086, 0.157); // #0a1628
+    vec3 cyan = vec3(0.0, 0.831, 1.0);     // #00d4ff
+    vec3 gridColor = mix(base, cyan * 0.5, gridLine * 0.7);
+
+    // Edge glow
+    vec3 edgeGlow = cyan * fresnel * 1.2;
+
+    // Atmosphere halo
+    float halo = pow(fresnel, 1.5) * 0.35;
+
+    vec3 finalColor = gridColor + edgeGlow;
+    float alpha = 0.55 + gridLine * 0.35 + halo;
+
+    gl_FragColor = vec4(finalColor, alpha);
+  }
+`;
+
+const globeMat = new THREE.ShaderMaterial({
+  vertexShader: globeVert,
+  fragmentShader: globeFrag,
+  uniforms: { uTime: { value: 0 } },
+  transparent: true,
+  side: THREE.FrontSide,
+  depthWrite: false,
+});
+
+const globe = new THREE.Mesh(new THREE.SphereGeometry(2, 64, 64), globeMat);
+scene.add(globe);
+
+/* ============================================================
+   Atmosphere ring (outer glow)
+   ============================================================ */
+const atmoVert = `
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+const atmoFrag = `
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+  void main() {
+    vec3 viewDir = normalize(-vPosition);
+    float fresnel = 1.0 - dot(viewDir, vNormal);
+    fresnel = pow(fresnel, 3.0);
+    vec3 cyan = vec3(0.0, 0.831, 1.0);
+    gl_FragColor = vec4(cyan, fresnel * 0.35);
+  }
+`;
+const atmoMat = new THREE.ShaderMaterial({
+  vertexShader: atmoVert,
+  fragmentShader: atmoFrag,
+  transparent: true,
+  side: THREE.BackSide,
+  depthWrite: false,
+});
+const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(2.25, 64, 64), atmoMat);
+scene.add(atmosphere);
+
+/* ============================================================
+   Helper: random point on sphere
+   ============================================================ */
+function randomSpherePoint(radius) {
+  const u = Math.random();
+  const v = Math.random();
+  const theta = 2 * Math.PI * u;
+  const phi = Math.acos(2 * v - 1);
+  return new THREE.Vector3(
+    radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.sin(phi) * Math.sin(theta),
+    radius * Math.cos(phi)
+  );
+}
+
+/* ============================================================
+   Data Arcs
+   ============================================================ */
+const arcGroup = new THREE.Group();
+scene.add(arcGroup);
+
+const arcData = [];
+const ARC_COUNT = 12;
+
+for (let i = 0; i < ARC_COUNT; i++) {
+  const start = randomSpherePoint(2);
+  const end = randomSpherePoint(2);
+  const mid = start.clone().add(end).multiplyScalar(0.5).normalize().multiplyScalar(3.2 + Math.random() * 0.6);
+
+  const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+  const points = curve.getPoints(60);
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+  // Color gradient: cyan -> purple
+  const colors = new Float32Array(points.length * 3);
+  const cyan = new THREE.Color(0x00d4ff);
+  const purple = new THREE.Color(0x7b61ff);
+  for (let j = 0; j < points.length; j++) {
+    const t = j / (points.length - 1);
+    const c = cyan.clone().lerp(purple, t);
+    colors[j * 3] = c.r;
+    colors[j * 3 + 1] = c.g;
+    colors[j * 3 + 2] = c.b;
+  }
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  const material = new THREE.LineBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.35,
+    linewidth: 1,
+  });
+
+  const line = new THREE.Line(geometry, material);
+  arcGroup.add(line);
+
+  // Traveling light dot
+  const dotGeo = new THREE.SphereGeometry(0.04, 8, 8);
+  const dotMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.95 });
+  const dot = new THREE.Mesh(dotGeo, dotMat);
+  arcGroup.add(dot);
+
+  arcData.push({
+    curve,
+    dot,
+    offset: (i / ARC_COUNT), // stagger
+    speed: 0.3 + Math.random() * 0.25,
+  });
+}
+
+/* ============================================================
+   Floating Particles
+   ============================================================ */
+const PARTICLE_COUNT = 3000;
+const particleGeo = new THREE.BufferGeometry();
+const particlePos = new Float32Array(PARTICLE_COUNT * 3);
+const particleSizes = new Float32Array(PARTICLE_COUNT);
+const particleDrift = []; // velocity vectors
+
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  const r = 2.5 + Math.random() * 1.5;
+  const p = randomSpherePoint(r);
+  particlePos[i * 3] = p.x;
+  particlePos[i * 3 + 1] = p.y;
+  particlePos[i * 3 + 2] = p.z;
+  particleSizes[i] = 1.0 + Math.random() * 2.0;
+  particleDrift.push(new THREE.Vector3(
+    (Math.random() - 0.5) * 0.002,
+    (Math.random() - 0.5) * 0.002,
+    (Math.random() - 0.5) * 0.002,
+  ));
+}
+
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePos, 3));
+particleGeo.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+
+const particleMat = new THREE.PointsMaterial({
+  color: 0x00d4ff,
+  size: 0.02,
+  transparent: true,
+  opacity: 0.45,
+  sizeAttenuation: true,
+  depthWrite: false,
+});
+
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+/* ============================================================
+   Mouse Drag Rotation
+   ============================================================ */
+let isDragging = false;
+let previousMouse = { x: 0, y: 0 };
+let rotationVelocity = { x: 0, y: 0 };
+let targetRotation = { x: 0.15, y: 0 };
+
+canvas.addEventListener('pointerdown', (e) => {
+  isDragging = true;
+  previousMouse.x = e.clientX;
+  previousMouse.y = e.clientY;
+  rotationVelocity.x = 0;
+  rotationVelocity.y = 0;
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - previousMouse.x;
+  const dy = e.clientY - previousMouse.y;
+  targetRotation.y += dx * 0.005;
+  targetRotation.x += dy * 0.005;
+  targetRotation.x = Math.max(-1.2, Math.min(1.2, targetRotation.x));
+  rotationVelocity.x = dy * 0.005;
+  rotationVelocity.y = dx * 0.005;
+  previousMouse.x = e.clientX;
+  previousMouse.y = e.clientY;
+});
+
+window.addEventListener('pointerup', () => { isDragging = false; });
+
+/* ============================================================
+   Animation Loop
+   ============================================================ */
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const elapsed = clock.getElapsedTime();
+  const delta = clock.getDelta();
+
+  globeMat.uniforms.uTime.value = elapsed;
+
+  // Auto-rotation when not dragging
+  if (!isDragging) {
+    const autoSpeed = prefersReduced ? 0 : 0.08;
+    targetRotation.y += autoSpeed * (1/60);
+    // Inertia decay
+    rotationVelocity.x *= 0.95;
+    rotationVelocity.y *= 0.95;
+    targetRotation.x += rotationVelocity.x * 0.3;
+    targetRotation.y += rotationVelocity.y * 0.3;
+  }
+
+  globe.rotation.x += (targetRotation.x - globe.rotation.x) * 0.08;
+  globe.rotation.y += (targetRotation.y - globe.rotation.y) * 0.08;
+  atmosphere.rotation.copy(globe.rotation);
+  arcGroup.rotation.copy(globe.rotation);
+
+  // Arcs: traveling dots
+  if (!prefersReduced) {
+    for (const arc of arcData) {
+      const t = ((elapsed * arc.speed + arc.offset) % 1.0);
+      const pos = arc.curve.getPoint(t);
+      arc.dot.position.copy(pos);
+      arc.dot.material.opacity = Math.sin(t * Math.PI) * 0.9 + 0.1;
+    }
+  }
+
+  // Particles drift
+  if (!prefersReduced) {
+    const posArr = particleGeo.attributes.position.array;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      posArr[i * 3] += particleDrift[i].x;
+      posArr[i * 3 + 1] += particleDrift[i].y;
+      posArr[i * 3 + 2] += particleDrift[i].z;
+
+      // Keep within shell
+      const x = posArr[i * 3], y = posArr[i * 3 + 1], z = posArr[i * 3 + 2];
+      const dist = Math.sqrt(x * x + y * y + z * z);
+      if (dist > 4.0 || dist < 2.5) {
+        particleDrift[i].multiplyScalar(-1);
+      }
+    }
+    particleGeo.attributes.position.needsUpdate = true;
+  }
+
+  // Particles slow orbit
+  if (!prefersReduced) {
+    particles.rotation.y += 0.0004;
+  }
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+/* ============================================================
+   Stat Counter Animation (on scroll into view)
+   ============================================================ */
+const statNumbers = document.querySelectorAll('.stat-card .number');
+let statsAnimated = false;
+
+function animateCounters() {
+  if (statsAnimated) return;
+  statsAnimated = true;
+
+  statNumbers.forEach(el => {
+    const target = parseFloat(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    const prefix = el.dataset.prefix || '';
+    const decimals = parseInt(el.dataset.decimals) || 0;
+    const duration = 2000;
+    const start = performance.now();
+
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      // Ease out cubic
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = (target * ease).toFixed(decimals);
+      el.textContent = prefix + current + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    if (prefersReduced) {
+      el.textContent = prefix + target.toFixed(decimals) + suffix;
+    } else {
+      requestAnimationFrame(tick);
+    }
+  });
+}
+
+const statsSection = document.querySelector('.stats');
+const observer = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) {
+    animateCounters();
+    observer.disconnect();
+  }
+}, { threshold: 0.3 });
+observer.observe(statsSection);
+</script>
+</body>
+</html>
